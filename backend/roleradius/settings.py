@@ -173,7 +173,7 @@ SIMPLE_JWT = {
 JWT_COOKIE_ACCESS_NAME   = 'access_token'
 JWT_COOKIE_REFRESH_NAME  = 'refresh_token'
 JWT_COOKIE_SECURE        = not DEBUG
-JWT_COOKIE_SAMESITE      = 'Lax'
+JWT_COOKIE_SAMESITE      = 'Lax' if DEBUG else 'None'
 JWT_COOKIE_HTTPONLY      = True
 JWT_COOKIE_ACCESS_MAX_AGE  = 15 * 60          # 15 minutes
 JWT_COOKIE_REFRESH_MAX_AGE = 7 * 24 * 60 * 60 # 7 days
@@ -189,7 +189,7 @@ CSRF_TRUSTED_ORIGINS = os.getenv(
     'CSRF_TRUSTED_ORIGINS', 'http://localhost:5173,http://localhost:3000'
 ).split(',')
 CSRF_COOKIE_HTTPONLY = False
-CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'Lax' if DEBUG else 'None'
 
 # ── Content Security Policy ───────────────────────────────────────────────────
 CSP_DEFAULT_SRC  = ("'self'",)
