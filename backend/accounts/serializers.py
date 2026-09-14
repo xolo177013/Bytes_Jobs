@@ -1,0 +1,229 @@
+from rest_framework import serializers
+from django.contrib.auth import authenticate
+from .models import User, CandidateProfile, RecruiterProfile, Company
+
+
+class RegisterSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, min_length=8)
+    confirm_password = serializers.CharField(write_only=True)
+    role = serializers.ChoiceField(choices=[User.CANDIDATE, User.RECRUITER])
+    company_name = serializers.CharField(required=False, write_only=True)
+
+    class Meta:
+        model = User
+        fields = ['email', 'full_name', 'password', 'confirm_password', 'role', 'company_name']
+
+    def validate(self, data):
+        if data['password'] != data['confirm_password']:
+            raise serializers.ValidationError({'confirm_password': 'Passwords do not match.'})
+        if data['role'] == User.RECRUITER and not data.get('company_name'):
+            raise serializers.ValidationError({'company_name': 'Company name is required for recruiters.'})
+        return data
+
+    def create(self, validated_data):
+        validated_data.pop('confirm_password')
+        company_name = validated_data.pop('company_name', '')
+        user = User.objects.create_user(**validated_data)
+        if user.role == User.CANDIDATE:
+            CandidateProfile.objects.create(user=user)
+        elif user.role == User.RECRUITER:
+            RecruiterProfile.objects.create(user=user, company_name=company_name)
+        return user
+
+
+class LoginSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        # django-axes requires the request object to track failed attempts
+        request = self.context.get('request')
+        user = authenticate(request=request, email=data['email'], password=data['password'])
+        if not user:
+            raise serializers.ValidationError('Invalid email or password.')
+        if not user.is_active:
+            raise serializers.ValidationError('Account is disabled.')
+        data['user'] = user
+        return data
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'full_name', 'role', 'is_email_verified', 'date_joined']
+        read_only_fields = ['id', 'is_email_verified', 'date_joined']
+
+
+class CandidateSearchResultSerializer(serializers.ModelSerializer):
+    """
+    Used for the recruiter talent-search *list* only — deliberately leaner
+    than CandidateProfileSerializer. Browsing a list of open-to-work
+    candidates shouldn't hand out email/phone/salary expectations for
+    everyone on the page; that level of detail is reserved for the full
+    profile view (PublicCandidateProfileView), which a recruiter reaches
+    by deliberately opening one specific candidate.
+    """
+    user_id = serializers.UUIDField(source='user.id', read_only=True)
+    full_name = serializers.CharField(source='user.full_name', read_only=True)
+    avatar_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CandidateProfile
+        fields = [
+            'user_id', 'full_name', 'headline', 'bio', 'location',
+            'skills', 'experience_years', 'avatar_url', 'open_to_work',
+            'linkedin', 'github',
+        ]
+
+    def get_avatar_url(self, obj):
+        return obj.avatar.url if obj.avatar else None
+
+
+class CandidateProfileSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    avatar_url = serializers.SerializerMethodField()
+    cv_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CandidateProfile
+        exclude = ['cv_text']
+
+    def get_avatar_url(self, obj):
+        if obj.avatar:
+            return obj.avatar.url
+        return None
+
+    def get_cv_url(self, obj):
+        if obj.cv:
+            return obj.cv.url
+        return None
+
+
+class CandidateProfileUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CandidateProfile
+        exclude = ['user', 'cv_text', 'created_at', 'updated_at']
+
+    def validate_skills(self, value):
+        if not isinstance(value, list):
+            raise serializers.ValidationError('Skills must be a list.')
+        return value
+
+    def validate_desired_job_types(self, value):
+        if not isinstance(value, list):
+            raise serializers.ValidationError('Desired job types must be a list.')
+        valid_codes = {c[0] for c in CandidateProfile.JOB_TYPE_CHOICES}
+        invalid = [v for v in value if v not in valid_codes]
+        if invalid:
+            raise serializers.ValidationError(
+                f'Invalid job type(s): {invalid}. Choose from: {sorted(valid_codes)}'
+            )
+        return value
+
+
+class CompanyTeammateSerializer(serializers.ModelSerializer):
+    """Minimal teammate info shown to other members of the same Company -- name/email/role."""
+    id = serializers.UUIDField(source='user.id', read_only=True)
+    full_name = serializers.CharField(source='user.full_name', read_only=True)
+    email = serializers.CharField(source='user.email', read_only=True)
+    role = serializers.CharField(source='company_role', read_only=True)
+
+    class Meta:
+        model = RecruiterProfile
+        fields = ['id', 'full_name', 'email', 'role']
+
+
+class CompanySerializer(serializers.ModelSerializer):
+    """
+    Full detail view -- includes join_code and the teammate roster (each
+    with their role). Only ever returned to a recruiter who is themselves
+    a member of this Company (enforced in the view, not here), so exposing
+    join_code here is safe: a non-member never reaches a serializer
+    instance for a Company they don't belong to.
+    """
+    logo_url = serializers.SerializerMethodField()
+    teammates = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Company
+        fields = [
+            'id', 'name', 'description', 'website', 'size', 'industry',
+            'logo_url', 'join_code', 'teammates', 'created_at',
+        ]
+
+    def get_logo_url(self, obj):
+        return obj.logo.url if obj.logo else None
+
+    def get_teammates(self, obj):
+        profiles = RecruiterProfile.objects.filter(company=obj).select_related('user').order_by('user__full_name')
+        return CompanyTeammateSerializer(profiles, many=True).data
+
+
+class CompanyCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Company
+        fields = ['name', 'description', 'website', 'size', 'industry']
+
+    def validate_name(self, value):
+        if not value or not value.strip():
+            raise serializers.ValidationError('Company name is required.')
+        return value.strip()
+
+
+class CompanyJoinSerializer(serializers.Serializer):
+    join_code = serializers.CharField(max_length=8)
+
+    def validate_join_code(self, value):
+        return value.strip().upper()
+
+
+class RecruiterProfileSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    logo_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = RecruiterProfile
+        fields = '__all__'
+
+    def get_logo_url(self, obj):
+        if obj.company_logo:
+            return obj.company_logo.url
+        return None
+
+
+class RecruiterProfileUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RecruiterProfile
+        exclude = ['user', 'verified', 'created_at', 'updated_at']
+
+
+class TokenSerializer(serializers.Serializer):
+    access = serializers.CharField()
+    refresh = serializers.CharField()
+    user = UserSerializer()
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True, min_length=8)
+    confirm_password = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        if data['new_password'] != data['confirm_password']:
+            raise serializers.ValidationError({'confirm_password': 'Passwords do not match.'})
+        return data
+
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    token = serializers.UUIDField()
+    new_password = serializers.CharField(min_length=8)
+    confirm_password = serializers.CharField()
+
+    def validate(self, data):
+        if data['new_password'] != data['confirm_password']:
+            raise serializers.ValidationError({'confirm_password': 'Passwords do not match.'})
+        return data

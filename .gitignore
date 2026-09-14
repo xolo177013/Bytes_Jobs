@@ -1,0 +1,131 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.Python
+
+venv/
+.venv/
+env/
+ENV/
+
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+pip-log.txt
+pip-delete-this-directory.txt
+
+
+# ── Django ────────────────────────────────────────────────────────────────────
+
+*.sqlite3
+
+/backend/staticfiles/
+/backend/media/
+/backend/mediafiles/
+/backend/logs/
+
+/backend/local_settings.py
+
+
+# ── Migrations ─────────────────────────────────────────────────────────────────
+# Keep Django migrations tracked in Git.
+# Do NOT add */migrations/ to .gitignore.
+
+
+# ── Node / React ───────────────────────────────────────────────────────────────
+
+node_modules/
+
+frontend/dist/
+frontend/build/
+
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+
+# ── VS Code ────────────────────────────────────────────────────────────────────
+
+.vscode/*.log
+
+# Keep project settings/extensions tracked
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/pyrightconfig.json
+
+
+# ── Operating System ──────────────────────────────────────────────────────────
+
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+
+# ── Docker ────────────────────────────────────────────────────────────────────
+
+*.override.yml
+.docker/
+
+
+# ── Testing & Coverage ────────────────────────────────────────────────────────
+
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+.tox/
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+
+# ── Secrets & Credentials ─────────────────────────────────────────────────────
+
+.env
+.env.*
+!.env.example
+
+*.pem
+*.key
+secrets.json
+
+
+# ── IDEs ──────────────────────────────────────────────────────────────────────
+
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+
+# ── Misc ──────────────────────────────────────────────────────────────────────
+
+*.log
+*.tmp
+*.bak
+*.orig
+*.rej
