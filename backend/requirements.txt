@@ -9,7 +9,7 @@ python-dotenv==1.0.0
 
 # Security
 django-axes==6.4.0
-django-csp==3.8
+django-csp==4.0
 
 # File storage
 cloudinary==1.36.0
