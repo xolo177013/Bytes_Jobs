@@ -7,13 +7,13 @@ date-released: "2026-06-07"
 license: MIT
 
 authors:
-  - family-names: "Hussain"
-    given-names: "Ahmad Abbas"
-    email: "Ahmedabbas52233@gmail.com"
+  - family-names: "Bytes"
+    given-names: "sougat"
+    email: "sougat711@gmail.com"
     orcid: "https://orcid.org/0000-0000-0000-0000"
 
-repository-code: "https://github.com/ahmedabbas52233-a11y/roleradius"
-url: "https://github.com/ahmedabbas52233-a11y/roleradius"
+repository-code: "https://github.com/xolo177013/Bytes_Jobs"
+url: "https://github.com/xolo177013/Bytes_Jobs"
 doi: "10.5281/zenodo.XXXXXXX"
 
 abstract: >
@@ -43,12 +43,12 @@ preferred-citation:
   type: software
   title: "RoleRadius: An Open-Source AI-Powered Job Portal with TF-IDF Cosine Similarity Candidate Matching"
   authors:
-    - family-names: "Hussain"
-      given-names: "Ahmad Abbas"
-      email: "Ahmedabbas52233@gmail.com"
+    - family-names: "Bytes"
+      given-names: "sougat"
+      email: "sougat711@gmail.com"
   year: 2026
   version: "1.0.0"
   doi: "10.5281/zenodo.XXXXXXX"
-  url: "https://github.com/ahmedabbas52233-a11y/roleradius"
-  repository-code: "https://github.com/ahmedabbas52233-a11y/roleradius"
+  url: "https://github.com/xolo177013/Bytes_Jobs"
+  repository-code: "https://github.com/xolo177013/Bytes_Jobs"
   license: MIT

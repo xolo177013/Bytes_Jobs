@@ -73,7 +73,7 @@ export default function Register() {
           <form onSubmit={handle} noValidate className="flex flex-col gap-4">
             <div>
               <label htmlFor="name" className="label">Full name</label>
-              <input id="name" type="text" required autoComplete="name" placeholder="Ahmad Abbas Hussain"
+              <input id="name" type="text" required autoComplete="name" placeholder="Rahul Kumar"
                 value={form.full_name} onChange={e=>setForm(f=>({...f,full_name:e.target.value}))}
                 className={`input${errors.full_name ? ' input-error' : ''}`} />
               {errors.full_name && <p className="error-msg">{errors.full_name[0]}</p>}

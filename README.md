@@ -430,6 +430,6 @@ Distributed under the MIT License. See [LICENSE](LICENSE) for details.
 
 <div align="center">
 
-Built by **Ahmad Abbas Hussain** as a final-year Computer Science dissertation project.
+Built by **sougat* as a 3rd-year Computer Science dissertation project.
 
 </div>
